@@ -1,0 +1,52 @@
+name: Snowflake Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Terraform Action
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+
+  push:
+    branches:
+      - main
+
+jobs:
+
+  terraform:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: corp
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'plan'
+        run: terraform plan
+
+      - name: Terraform Apply Manual
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve
+
+      - name: Terraform Apply Auto
+        if: github.event_name == 'push'
+        run: terraform apply -auto-approve
